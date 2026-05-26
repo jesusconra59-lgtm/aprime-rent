@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Registro | APRIME RENT</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+ 
+    :root {
+      --bg: #0a0a0a;
+      --surface: #111111;
+      --surface2: #1a1a1a;
+      --border: #2a2a2a;
+      --red: #cc0000;
+      --red-dark: #990000;
+      --red-glow: rgba(204,0,0,0.15);
+      --text: #e8e8e8;
+      --muted: #888;
+      --error: #ff4444;
+      --success: #44cc77;
+    }
+ 
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Rajdhani', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+      position: relative;
+      overflow-x: hidden;
+    }
+ 
+    /* Fondo con líneas diagonales sutil */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: repeating-linear-gradient(
+        -45deg,
+        transparent,
+        transparent 40px,
+        rgba(204,0,0,0.015) 40px,
+        rgba(204,0,0,0.015) 41px
+      );
+      pointer-events: none;
+      z-index: 0;
+    }
+ 
+    /* Brillo rojo arriba */
+    body::after {
+      content: '';
+      position: fixed;
+      top: -100px; left: 50%;
+      transform: translateX(-50%);
+      width: 600px; height: 300px;
+      background: radial-gradient(ellipse, rgba(204,0,0,0.12) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+ 
+    /* ── HEADER ── */
+    .header {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      margin-bottom: 2rem;
+      animation: fadeDown 0.5s ease both;
+    }
+ 
+    .brand {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 3rem;
+      letter-spacing: 0.08em;
+      color: var(--red);
+      text-shadow: 0 0 30px rgba(204,0,0,0.4), 2px 2px 0 #550000;
+      line-height: 1;
+    }
+ 
+    .brand span { color: #e8e8e8; }
+ 
+    .tagline {
+      font-size: 0.7rem;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 0.25rem;
+      border-top: 1px solid var(--border);
+      padding-top: 0.4rem;
+    }
+ 
+    /* ── CARD ── */
+    .card {
+      position: relative;
+      z-index: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--red);
+      width: 100%;
+      max-width: 460px;
+      padding: 2.5rem 2.5rem 2rem;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 40px rgba(204,0,0,0.05);
+      animation: fadeUp 0.5s ease both;
+    }
+ 
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+ 
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--red);
+      margin-bottom: 1.25rem;
+    }
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+ 
+    .card-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.6rem;
+      letter-spacing: 0.06em;
+      color: var(--text);
+      margin-bottom: 0.25rem;
+    }
+    .card-sub {
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-bottom: 2rem;
+    }
+ 
+    /* ── FIELDS ── */
+    .field {
+      margin-bottom: 1.1rem;
+    }
+ 
+    label {
+      display: block;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.35rem;
+    }
+ 
+    input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-left: 3px solid transparent;
+      color: var(--text);
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 1rem;
+      font-weight: 500;
+      padding: 0.65rem 0.85rem;
+      outline: none;
+      transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+    }
+    input::placeholder { color: #444; }
+    input:focus {
+      border-color: var(--border);
+      border-left-color: var(--red);
+      background: #161616;
+      box-shadow: inset 0 0 0 0 transparent, 0 0 12px rgba(204,0,0,0.08);
+    }
+    input.error-field {
+      border-left-color: var(--error);
+      border-color: rgba(255,68,68,0.3);
+    }
+ 
+    .field-error {
+      font-size: 0.7rem;
+      color: var(--error);
+      margin-top: 0.3rem;
+      letter-spacing: 0.04em;
+      display: none;
+    }
+    .field-error.show { display: block; }
+ 
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+ 
+    /* ── BUTTON ── */
+    .btn {
+      width: 100%;
+      background: var(--red);
+      color: #fff;
+      border: none;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.15rem;
+      letter-spacing: 0.15em;
+      padding: 0.85rem 1rem;
+      cursor: pointer;
+      margin-top: 1rem;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+    }
+    .btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 50%);
+      pointer-events: none;
+    }
+    .btn:hover:not(:disabled) {
+      background: #dd0000;
+      transform: translateY(-1px);
+      box-shadow: 0 8px 24px rgba(204,0,0,0.35);
+    }
+    .btn:active:not(:disabled) { transform: translateY(0); }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; }
+ 
+    .spinner {
+      display: inline-block;
+      width: 14px; height: 14px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      vertical-align: middle;
+      margin-right: 0.4rem;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+ 
+    /* ── ALERT ── */
+    .alert {
+      padding: 0.7rem 1rem;
+      font-size: 0.82rem;
+      margin-top: 0.75rem;
+      display: none;
+      align-items: flex-start;
+      gap: 0.5rem;
+      line-height: 1.5;
+      border-left: 3px solid;
+    }
+    .alert.show { display: flex; }
+    .alert-error  { background: rgba(255,68,68,0.07);  border-color: var(--error);   color: var(--error); }
+    .alert-success{ background: rgba(68,204,119,0.07); border-color: var(--success); color: var(--success); }
+ 
+    /* ── FOOTER LINK ── */
+    .login-link {
+      text-align: center;
+      margin-top: 1.5rem;
+      font-size: 0.82rem;
+      color: var(--muted);
+      letter-spacing: 0.02em;
+    }
+    .login-link a {
+      color: var(--red);
+      text-decoration: none;
+      font-weight: 600;
+    }
+    .login-link a:hover { text-decoration: underline; }
+ 
+    /* ── SUCCESS SCREEN ── */
+    .success-screen {
+      display: none;
+      text-align: center;
+      padding: 1.5rem 0;
+      animation: fadeUp 0.5s ease both;
+    }
+    .success-screen.show { display: block; }
+    .success-icon {
+      width: 60px; height: 60px;
+      border: 2px solid var(--success);
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1.25rem;
+      font-size: 1.5rem;
+      box-shadow: 0 0 20px rgba(68,204,119,0.2);
+    }
+    .success-screen h2 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.8rem;
+      letter-spacing: 0.08em;
+      color: var(--text);
+      margin-bottom: 0.5rem;
+    }
+    .success-screen p { font-size: 0.88rem; color: var(--muted); line-height: 1.6; }
+    .email-highlight {
+      display: inline-block;
+      background: rgba(204,0,0,0.1);
+      border: 1px solid rgba(204,0,0,0.25);
+      padding: 0.2rem 0.6rem;
+      color: var(--red);
+      font-size: 0.85rem;
+      margin-top: 0.5rem;
+      font-weight: 600;
+    }
+ 
+    /* ── VOLVER LINK ── */
+    .back-link {
+      position: relative;
+      z-index: 1;
+      margin-top: 1.5rem;
+      font-size: 0.75rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--muted);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--red); }
+  </style>
+</head>
+<body>
+ 
+  <!-- HEADER -->
+  <div class="header">
+    <div class="brand">APRIME <span>RENT</span></div>
+    <div class="tagline">— Renta y venta de vehículos —</div>
+  </div>
+ 
+  <!-- CARD -->
+  <div class="card">
+ 
+    <!-- FORMULARIO -->
+    <div id="form-section">
+      <div class="section-title">Nuevo cliente</div>
+      <div class="card-title">Crear cuenta</div>
+      <div class="card-sub">Completa tus datos para registrarte</div>
+ 
+      <!-- Datos personales -->
+      <div class="row">
+        <div class="field">
+          <label for="nombre">Nombre completo</label>
+          <input type="text" id="nombre" placeholder="Juan Pérez" autocomplete="name"/>
+          <div class="field-error" id="err-nombre">Ingresa tu nombre.</div>
+        </div>
+        <div class="field">
+          <label for="cedula">Cédula</label>
+          <input type="text" id="cedula" placeholder="1234567890" autocomplete="off"/>
+          <div class="field-error" id="err-cedula">Cédula inválida.</div>
+        </div>
+      </div>
+ 
+      <div class="field">
+        <label for="email">Correo electrónico</label>
+        <input type="email" id="email" placeholder="correo@ejemplo.com" autocomplete="email"/>
+        <div class="field-error" id="err-email">Ingresa un correo válido.</div>
+      </div>
+ 
+      <div class="row">
+        <div class="field">
+          <label for="password">Contraseña</label>
+          <input type="password" id="password" placeholder="Mínimo 6 caracteres" autocomplete="new-password"/>
+          <div class="field-error" id="err-password">Mínimo 6 caracteres.</div>
+        </div>
+        <div class="field">
+          <label for="confirm">Confirmar</label>
+          <input type="password" id="confirm" placeholder="Repite la contraseña" autocomplete="new-password"/>
+          <div class="field-error" id="err-confirm">No coinciden.</div>
+        </div>
+      </div>
+ 
+      <div class="alert alert-error" id="alert-error">
+        <span>⚠</span><span id="alert-error-msg"></span>
+      </div>
+ 
+      <button class="btn" id="btn-register" onclick="handleRegister()">
+        Registrarme
+      </button>
+ 
+      <div class="login-link">
+        <a href="../login.html">Inicia sesión</a>
+      </div>
+    </div>
+ 
+    <!-- ÉXITO -->
+    <div class="success-screen" id="success-section">
+      <div class="success-icon">✓</div>
+      <h2>¡Registro exitoso!</h2>
+      <p><p>Tu cuenta fue creada exitosamente. Ya puedes iniciar sesión:</p>:</p>
+      <div class="email-highlight" id="success-email"></div>
+      <p style="margin-top:1rem;">Una vez confirmado podrás iniciar sesión.</p>
+    </div>
+ 
+  </div>
+ 
+  <a href="../index.html" class="back-link">← Volver al inicio</a>
+ 
+  <script>
+    // =============================================
+    // 🔧 REEMPLAZA CON TUS CREDENCIALES
+    // =============================================
+    const SUPABASE_URL = 'https://vdzcmqlxxezqsovazvud.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkemNtcWx4eGV6cXNvdmF6dnVkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2NDY4ODgsImV4cCI6MjA5NTIyMjg4OH0.okNWUIidqB9UUSEOdMUre4NInsEF6d568u_42H27qwA'; // la clave completa
+    // =============================================
+ 
+    const { createClient } = supabase;
+    const sb = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+ 
+    function showErr(fieldId, errId, show) {
+      document.getElementById(fieldId).classList.toggle('error-field', show);
+      document.getElementById(errId).classList.toggle('show', show);
+      return show;
+    }
+ 
+    function validate() {
+      const nombre   = document.getElementById('nombre').value.trim();
+      const cedula   = document.getElementById('cedula').value.trim();
+      const email    = document.getElementById('email').value.trim();
+      const password = document.getElementById('password').value;
+      const confirm  = document.getElementById('confirm').value;
+      let ok = true;
+ 
+      if (!nombre)                             { showErr('nombre',  'err-nombre',   true);  ok = false; } else showErr('nombre',  'err-nombre',   false);
+      if (!cedula || !/^\d{6,12}$/.test(cedula)) { showErr('cedula',  'err-cedula',   true);  ok = false; } else showErr('cedula',  'err-cedula',   false);
+      if (!email || !email.includes('@'))      { showErr('email',   'err-email',    true);  ok = false; } else showErr('email',   'err-email',    false);
+      if (password.length < 6)                 { showErr('password','err-password', true);  ok = false; } else showErr('password','err-password', false);
+      if (password !== confirm)                { showErr('confirm', 'err-confirm',  true);  ok = false; } else showErr('confirm', 'err-confirm',  false);
+ 
+      return ok;
+    }
+ 
+async function handleRegister() {
+  if (!validate()) return;
+
+  const nombre   = document.getElementById('nombre').value.trim();
+  const cedula   = document.getElementById('cedula').value.trim();
+  const email    = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const btn      = document.getElementById('btn-register');
+  const alertEl  = document.getElementById('alert-error');
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Registrando...';
+  alertEl.classList.remove('show');
+
+  try {
+    const { data: authData, error: authError } = await sb.auth.signUp({
+      email, password,
+      options: {
+        data: { nombre, cedula }
+      }
+    });
+
+    if (authError) throw authError;
+
+    // ✅ Éxito — el trigger de Supabase crea el perfil automáticamente
+    document.getElementById('form-section').style.display = 'none';
+    document.getElementById('success-email').textContent = email;
+    document.getElementById('success-section').classList.add('show');
+
+  } catch (err) {
+    document.getElementById('alert-error-msg').textContent =
+      traducirError(err.message || 'Error inesperado.');
+    alertEl.classList.add('show');
+    btn.disabled = false;
+    btn.textContent = 'Registrarme';
+  }
+}
+ 
+    function traducirError(msg) {
+      if (msg.includes('already registered') || msg.includes('already been registered'))
+        return 'Este correo ya está registrado.';
+      if (msg.includes('invalid email'))   return 'El correo no es válido.';
+      if (msg.includes('Password should')) return 'La contraseña debe tener al menos 6 caracteres.';
+      if (msg.includes('duplicate key') && msg.includes('cedula')) return 'Esta cédula ya está registrada.';
+      return msg;
+    }
+ 
+    ['nombre','cedula','email','password','confirm'].forEach(id => {
+      document.getElementById(id).addEventListener('input', () => {
+        document.getElementById(id).classList.remove('error-field');
+      });
+    });
+  </script>
+</body>
+</html>
+ 
