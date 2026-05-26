@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mi Perfil | APRIME RENT</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0a0a0a; --surface: #111; --surface2: #1a1a1a;
+      --border: #2a2a2a; --red: #cc0000; --gold: #C9A84C;
+      --text: #e8e8e8; --muted: #888; --success: #44cc77;
+      --sidebar-w: 230px;
+    }
+    body { background: var(--bg); color: var(--text); font-family: 'Rajdhani', sans-serif; min-height: 100vh; display: flex; }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      position: fixed; top: 0; left: 0;
+      width: var(--sidebar-w); height: 100vh;
+      background: linear-gradient(180deg,#0e0e0e,#0a0a0a);
+      border-right: 1px solid rgba(204,0,0,0.4);
+      display: flex; flex-direction: column; z-index: 100;
+    }
+    .sidebar::before { content:''; display:block; width:100%; height:3px; background:linear-gradient(90deg,#900,#c00 55%,#C9A84C); flex-shrink:0; }
+    .sidebar-brand { padding:22px 18px 16px; border-bottom:1px solid var(--border); }
+    .brand-name { font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:4px; color:var(--red); }
+    .brand-sub { font-size:9px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; margin-top:3px; }
+    .sidebar-nav { flex:1; padding:20px 0; display:flex; flex-direction:column; gap:2px; }
+    .nav-item { display:flex; align-items:center; gap:12px; padding:11px 16px; margin:0 8px; border-radius:7px; cursor:pointer; border:1px solid transparent; text-decoration:none; color:var(--muted); font-size:13px; font-weight:500; letter-spacing:1px; text-transform:uppercase; transition:.18s; }
+    .nav-item:hover { background:rgba(204,0,0,0.07); border-color:rgba(204,0,0,.25); color:#ccc; }
+    .nav-item.active { background:rgba(204,0,0,0.13); border-color:rgba(204,0,0,0.4); color:#fff; }
+    .nav-icon { width:17px; height:17px; flex-shrink:0; opacity:.6; }
+    .nav-item.active .nav-icon, .nav-item:hover .nav-icon { opacity:1; }
+    .sidebar-footer { padding:12px 18px; border-top:1px solid var(--border); font-size:10px; color:rgba(255,255,255,.18); letter-spacing:1.2px; }
+
+    /* ── MAIN ── */
+    .main { margin-left: var(--sidebar-w); flex:1; padding:40px; max-width:900px; }
+
+    .page-header { margin-bottom:32px; }
+    .page-header h1 { font-family:'Bebas Neue',sans-serif; font-size:2.2rem; letter-spacing:4px; color:var(--text); }
+    .page-header p { color:var(--muted); font-size:14px; margin-top:4px; }
+
+    /* ── PROFILE CARD ── */
+    .profile-card {
+      background:var(--surface); border:1px solid var(--border);
+      border-top:3px solid var(--red); border-radius:4px;
+      padding:28px; margin-bottom:24px;
+      display:flex; align-items:center; gap:24px;
+    }
+    .avatar-circle {
+      width:72px; height:72px; border-radius:50%;
+      background:var(--red); border:2px solid #cc0000;
+      display:flex; align-items:center; justify-content:center;
+      font-family:'Bebas Neue',sans-serif; font-size:28px; color:#fff;
+      flex-shrink:0;
+    }
+    .profile-info h2 { font-family:'Bebas Neue',sans-serif; font-size:1.6rem; letter-spacing:2px; }
+    .profile-info p { color:var(--muted); font-size:13px; margin-top:4px; }
+    .profile-badge {
+      display:inline-block; background:rgba(201,168,76,0.12);
+      border:1px solid rgba(201,168,76,0.35); color:var(--gold);
+      font-size:11px; letter-spacing:1.5px; text-transform:uppercase;
+      padding:3px 10px; border-radius:3px; margin-top:8px;
+    }
+
+    /* ── SECTIONS ── */
+    .section { margin-bottom:28px; }
+    .section-label {
+      font-size:10px; font-weight:700; letter-spacing:2.5px;
+      text-transform:uppercase; color:var(--red);
+      border-bottom:1px solid var(--border); padding-bottom:8px; margin-bottom:16px;
+    }
+
+    /* ── STATS ── */
+    .stats-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; }
+    .stat-box {
+      background:var(--surface); border:1px solid var(--border); border-radius:4px;
+      padding:18px; text-align:center;
+    }
+    .stat-box .num { font-family:'Bebas Neue',sans-serif; font-size:2rem; color:var(--red); }
+    .stat-box .lbl { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-top:4px; }
+
+    /* ── TABLE ── */
+    .table-wrap { background:var(--surface); border:1px solid var(--border); border-radius:4px; overflow:hidden; }
+    table { width:100%; border-collapse:collapse; font-size:13px; }
+    th { background:var(--surface2); color:var(--muted); font-size:10px; letter-spacing:1.5px; text-transform:uppercase; padding:10px 14px; text-align:left; }
+    td { padding:11px 14px; border-top:1px solid var(--border); color:var(--text); }
+    tr:hover td { background:rgba(255,255,255,0.02); }
+    .badge { display:inline-block; padding:2px 8px; border-radius:3px; font-size:11px; font-weight:600; letter-spacing:.5px; }
+    .badge-ok   { background:rgba(68,204,119,0.15); color:#44cc77; border:1px solid rgba(68,204,119,0.3); }
+    .badge-pend { background:rgba(255,200,0,0.15);  color:#ffc800; border:1px solid rgba(255,200,0,0.3); }
+    .empty-row td { text-align:center; color:var(--muted); padding:24px; }
+
+    /* ── LOGOUT BTN ── */
+    .btn-logout {
+      background:transparent; border:1px solid rgba(204,0,0,0.4); color:var(--red);
+      font-family:'Bebas Neue',sans-serif; font-size:14px; letter-spacing:2px;
+      padding:10px 24px; cursor:pointer; border-radius:3px; transition:.2s;
+    }
+    .btn-logout:hover { background:rgba(204,0,0,0.1); }
+
+    /* loading */
+    .loading { text-align:center; padding:60px; color:var(--muted); font-size:14px; letter-spacing:2px; text-transform:uppercase; }
+
+    /* not logged */
+    .not-logged { text-align:center; padding:80px 20px; }
+    .not-logged h2 { font-family:'Bebas Neue',sans-serif; font-size:2rem; color:var(--red); margin-bottom:12px; }
+    .not-logged p { color:var(--muted); margin-bottom:24px; font-size:14px; }
+    .btn-login { display:inline-block; background:var(--red); color:#fff; font-family:'Bebas Neue',sans-serif; font-size:16px; letter-spacing:3px; padding:12px 32px; text-decoration:none; border-radius:3px; }
+
+    @media(max-width:768px){
+      :root{ --sidebar-w:0px; }
+      .sidebar{ display:none; }
+      .main{ margin-left:0; padding:20px; }
+      .stats-grid{ grid-template-columns:1fr 1fr; }
+      .profile-card{ flex-direction:column; text-align:center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-name">Aprime Rent</div>
+    <div class="brand-sub">Renta &amp; Venta</div>
+  </div>
+  <nav class="sidebar-nav">
+    <a class="nav-item" href="index.html">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+      <span>Inicio</span>
+    </a>
+    <a class="nav-item active" href="perfil.html">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span>Mi Perfil</span>
+    </a>
+    <a class="nav-item" href="login.html">
+      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+      <span>Iniciar Sesión</span>
+    </a>
+  </nav>
+  <div class="sidebar-footer">APRIME RENT © 2026</div>
+</aside>
+
+<!-- MAIN -->
+<main class="main">
+  <div id="loading" class="loading">Cargando perfil...</div>
+  <div id="not-logged" class="not-logged" style="display:none">
+    <h2>Acceso requerido</h2>
+    <p>Inicia sesión para ver tu perfil y tu historial.</p>
+    <a href="login.html" class="btn-login">Iniciar Sesión</a>
+  </div>
+
+  <div id="profile-content" style="display:none">
+    <div class="page-header">
+      <h1>Mi Perfil</h1>
+      <p>Gestiona tu cuenta y revisa tu actividad</p>
+    </div>
+
+    <!-- Avatar + info -->
+    <div class="profile-card">
+      <div class="avatar-circle" id="avatar-initials">AP</div>
+      <div class="profile-info">
+        <h2 id="profile-name">—</h2>
+        <p id="profile-email">—</p>
+        <p id="profile-cedula" style="color:#666; font-size:12px; margin-top:2px;"></p>
+        <div class="profile-badge">Cliente Verificado</div>
+      </div>
+      <div style="margin-left:auto">
+        <button class="btn-logout" onclick="cerrarSesion()">Cerrar Sesión</button>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="section">
+      <div class="section-label">Resumen de actividad</div>
+      <div class="stats-grid">
+        <div class="stat-box"><div class="num" id="stat-rentas">0</div><div class="lbl">Rentas realizadas</div></div>
+        <div class="stat-box"><div class="num" id="stat-compras">0</div><div class="lbl">Intereses de compra</div></div>
+        <div class="stat-box"><div class="num" id="stat-ventas">0</div><div class="lbl">Vehículos publicados</div></div>
+      </div>
+    </div>
+
+    <!-- Historial rentas -->
+    <div class="section">
+      <div class="section-label">Historial de rentas</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Tipo</th><th>Ciudad</th><th>Desde</th><th>Hasta</th><th>Pago</th><th>Estado</th></tr></thead>
+          <tbody id="tabla-rentas"><tr class="empty-row"><td colspan="6">Sin registros aún</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Historial intereses compra -->
+    <div class="section">
+      <div class="section-label">Intereses de compra</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Vehículo</th><th>Método de pago</th><th>Mensaje</th></tr></thead>
+          <tbody id="tabla-compras"><tr class="empty-row"><td colspan="3">Sin registros aún</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Vehículos publicados -->
+    <div class="section">
+      <div class="section-label">Vehículos que has publicado</div>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Vehículo</th><th>Ciudad</th><th>Precio/día</th><th>En venta</th></tr></thead>
+          <tbody id="tabla-publicaciones"><tr class="empty-row"><td colspan="4">Sin registros aún</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script>
+  const SUPABASE_URL = 'https://vdzcmqlxxezqsovazvud.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkemNtcWx4eGV6cXNvdmF6dnVkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk2NDY4ODgsImV4cCI6MjA5NTIyMjg4OH0.okNWUIidqB9UUSEOdMUre4NInsEF6d568u_42H27qwA';
+  const { createClient } = supabase;
+  const sb = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  async function init() {
+    const { data: { session } } = await sb.auth.getSession();
+    document.getElementById('loading').style.display = 'none';
+
+    if (!session) {
+      document.getElementById('not-logged').style.display = 'block';
+      return;
+    }
+
+    document.getElementById('profile-content').style.display = 'block';
+    const user = session.user;
+    const nombre  = user.user_metadata?.nombre || user.email.split('@')[0];
+    const cedula  = user.user_metadata?.cedula  || '';
+    const initials = nombre.split(' ').map(n => n[0]).join('').toUpperCase().slice(0,2);
+
+    document.getElementById('avatar-initials').textContent = initials;
+    document.getElementById('profile-name').textContent    = nombre;
+    document.getElementById('profile-email').textContent   = user.email;
+    if (cedula) document.getElementById('profile-cedula').textContent = 'Cédula: ' + cedula;
+
+    // Cargar datos por email
+    const email = user.email;
+    await Promise.all([
+      cargarRentas(email),
+      cargarCompras(email),
+      cargarPublicaciones(nombre, email)
+    ]);
+  }
+
+  async function cargarRentas(email) {
+    const { data } = await sb.from('rentas').select('*').eq('email', email).order('id', { ascending: false });
+    if (!data || !data.length) return;
+    document.getElementById('stat-rentas').textContent = data.length;
+    const tbody = document.getElementById('tabla-rentas');
+    tbody.innerHTML = data.map(r => `
+      <tr>
+        <td>${r.tipo_vehiculo || '—'}</td>
+        <td>${r.ciudad || '—'}</td>
+        <td>${r.fecha_inicio || '—'}</td>
+        <td>${r.fecha_fin || '—'}</td>
+        <td>${r.metodo_pago || '—'}</td>
+        <td><span class="badge badge-ok">Confirmada</span></td>
+      </tr>`).join('');
+  }
+
+  async function cargarCompras(email) {
+    const { data } = await sb.from('intereses_compra').select('*').eq('email', email).order('id', { ascending: false });
+    if (!data || !data.length) return;
+    document.getElementById('stat-compras').textContent = data.length;
+    const tbody = document.getElementById('tabla-compras');
+    tbody.innerHTML = data.map(c => `
+      <tr>
+        <td>${c.vehiculo_nombre || '—'}</td>
+        <td>${c.metodo_pago || '—'}</td>
+        <td>${c.mensaje || '—'}</td>
+      </tr>`).join('');
+  }
+
+  async function cargarPublicaciones(nombre, email) {
+    const { data } = await sb.from('publicaciones').select('*').eq('email', email).order('id', { ascending: false });
+    if (!data || !data.length) return;
+    document.getElementById('stat-ventas').textContent = data.length;
+    const tbody = document.getElementById('tabla-publicaciones');
+    tbody.innerHTML = data.map(p => `
+      <tr>
+        <td>${p.marca || ''} ${p.modelo || ''} ${p.anio || ''}</td>
+        <td>${p.ciudad || '—'}</td>
+        <td>$${p.precio_dia ? p.precio_dia.toLocaleString('es-CO') : '0'}</td>
+        <td>${p.en_venta ? '<span class="badge badge-ok">Sí</span>' : '<span class="badge badge-pend">No</span>'}</td>
+      </tr>`).join('');
+  }
+
+  async function cerrarSesion() {
+    await sb.auth.signOut();
+    window.location.href = 'login.html';
+  }
+
+  init();
+</script>
+</body>
+</html>
