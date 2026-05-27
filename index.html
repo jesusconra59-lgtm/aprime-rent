@@ -801,14 +801,6 @@ footer{ background:#111; padding:25px; text-align:center; color:#aaa; font-size:
     <div class="nav-divider"></div>
     <div class="nav-label">Cuenta</div>
 
-    <a class="nav-item" href="registro.html">
-      <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
-        <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
-        <circle cx="12" cy="7" r="4"/>
-      </svg>
-      <span>Mi Perfil</span>
-    </a>
-
     <a class="nav-item" href="#" onclick="abrirMisVehiculos(); setActive(this); return false;">
       <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6">
         <rect x="1" y="3" width="15" height="13" rx="2"/>
@@ -1274,15 +1266,14 @@ async function cargarVehiculosRenta(){
     card.id = 'rcard-'+v.id;
     const precioTexto = v.precio_dia ? '$'+Number(v.precio_dia).toLocaleString('es-CO')+'/día' : 'Consultar precio';
     const imgFallback = 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=400&auto=format&fit=crop';
-    // Usar imagen_url, o fotos[0] si imagen_url está vacío, o fallback
     const _fotosArr = (v.fotos && Array.isArray(v.fotos) && v.fotos.length > 0) ? v.fotos : [];
     const _rawUrl = v.imagen_url || v.imagen || _fotosArr[0] || '';
     const imgSrc = (_rawUrl && _rawUrl.trim()) ? _rawUrl.trim() : imgFallback;
     const fotos = _fotosArr.length > 0 ? _fotosArr : (imgSrc !== imgFallback ? [imgSrc] : [imgFallback]);
     card.innerHTML = `
       <div style="position:relative;">
-        <img src="${imgSrc}" alt="${v.marca} ${v.modelo}" onerror="this.src='https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=400&auto=format&fit=crop'">
-        ${fotos.length>1?`<div style="position:absolute;bottom:6px;right:6px;background:rgba(0,0,0,0.65);color:#fff;font-size:10px;padding:2px 7px;border-radius:20px;font-family:Rajdhani,sans-serif;font-weight:600;cursor:pointer;" onclick="event.stopPropagation();_abrirGaleriaRenta(${v.id})">📷 ${fotos.length}</div>`:''}
+        <img src="${imgSrc}" alt="${v.marca} ${v.modelo}" onerror="this.src='${imgFallback}'">
+        ${fotos.length>1?`<div style="position:absolute;bottom:6px;right:6px;background:rgba(0,0,0,0.65);color:#fff;font-size:10px;padding:2px 7px;border-radius:20px;font-family:Rajdhani,sans-serif;font-weight:600;cursor:pointer;" onclick="event.stopPropagation();document.getElementById('rcard-${v.id}').click()">📷 ${fotos.length}</div>`:''}
       </div>
       <div class="vehiculo-card-info">
         <h4>${v.marca} ${v.modelo} ${v.anio||''}</h4>
@@ -1291,10 +1282,17 @@ async function cargarVehiculosRenta(){
         <div class="precio-venta" style="font-size:14px">${precioTexto}</div>
         <span class="badge-disponible">Disponible</span>
       </div>`;
-    card.onclick = () => seleccionarVehiculoRenta(v);
-    // Guardar en mapa global para galería
-    const clave = 'renta_' + v.id;
-    _vehiculosResultado[clave] = {...v, _modo:'renta', _label:'Disponible para renta'};
+    card.onclick = (e) => {
+      if(e.target.closest('[onclick]') && e.target !== card && !e.target.closest('.vehiculo-card-info')) return;
+      seleccionarVehiculoRenta(v);
+      const clave = 'renta_' + v.id;
+      const _fa = (v.fotos && Array.isArray(v.fotos) && v.fotos.length > 0) ? v.fotos : [];
+      const _ru = v.imagen_url || v.imagen || _fa[0] || '';
+      const imgS = (_ru && _ru.trim()) ? _ru.trim() : imgFallback;
+      const fotosGal = _fa.length > 0 ? _fa : (imgS.includes('unsplash') ? [imgS] : [imgS]);
+      _vehiculosResultado[clave] = { ...v, fotos: fotosGal, _modo:'renta', _label:'Disponible para renta' };
+      setTimeout(() => abrirGaleriaFotos(clave), 50);
+    };
     grid.appendChild(card);
   });
 }
@@ -1477,7 +1475,20 @@ async function cargarCatalogo(){
     card.className = 'vehiculo-card'; card.id = 'vcard-'+v.id;
     const imgSrc = v.imagen || imgFallback;
     card.innerHTML = `<img src="${imgSrc}" alt="${v.nombre}" onerror="this.src='${imgFallback}'"><div class="vehiculo-card-info"><h4>${v.nombre}</h4><p>📍 ${v.ciudad||'—'} · ${v.tipo||'—'}</p><div class="precio-venta">$${v.precio?Number(v.precio).toLocaleString('es-CO'):'Consultar'}</div><span class="badge-disponible">Disponible</span></div>`;
-    card.onclick = () => seleccionarVehiculo(v);
+    card.onclick = () => {
+      seleccionarVehiculo(v);
+      const imgF = v.imagen || imgFallback;
+      const fotosGal = (imgF && !imgF.includes('unsplash')) ? [imgF] : [imgFallback];
+      const clave = 'compra_' + v.id;
+      _vehiculosResultado[clave] = {
+        ...v, fotos: fotosGal, _modo:'venta', _label:'En venta',
+        marca: v.nombre || '', modelo: '', anio: ''
+      };
+      setTimeout(() => {
+        document.getElementById('galeriaBtnAccion').style.display = 'block';
+        abrirGaleriaFotos(clave);
+      }, 50);
+    };
     grid.appendChild(card);
   });
 }
